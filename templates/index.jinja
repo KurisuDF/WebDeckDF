@@ -687,6 +687,19 @@
                   </select>
                 </div>
 
+                <div class="setting config-import-export">
+                  <label for="import-config-file"> {{text('config_file')}} </label>
+                  <div class="config-file-actions">
+                    <button type="button" id="export-config" class="button {{dark_theme}}">
+                      {{text('export_config')}}
+                    </button>
+                    <button type="button" id="import-config" class="button {{dark_theme}}">
+                      {{text('import_config')}}
+                    </button>
+                    <input type="file" id="import-config-file" class="invisible" accept="application/json,.json">
+                  </div>
+                </div>
+
                 <div class="setting windows-startup {% if not is_exe %}invisible{% endif %}">
                   <p> {{text('config-windows_startup')}} </p>
                   <label for="windows-startup" class="switch">
@@ -1438,6 +1451,76 @@
         }
       }
 
+      function isValidWebDeckConfig(configData) {
+        return configData
+          && typeof configData === 'object'
+          && configData.settings
+          && configData.settings.soundboard
+          && configData.settings.obs
+          && configData.front
+          && configData.front.height
+          && configData.front.width
+          && configData.front.buttons;
+      }
+
+      async function exportConfig() {
+        try {
+          const configData = await get_config();
+          const blob = new Blob([JSON.stringify(configData, null, 4)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'config.json';
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          showError(`{{text("config_export_error")}}`);
+        }
+      }
+
+      async function importConfigFile(file) {
+        if (!file) {
+          return;
+        }
+
+        try {
+          const importedConfig = JSON.parse(await file.text());
+
+          if (!isValidWebDeckConfig(importedConfig)) {
+            showError(`{{text("config_import_invalid")}}`);
+            return;
+          }
+
+          if (!confirm(`{{text("config_import_confirm")}}`)) {
+            return;
+          }
+
+          const response = await fetch('/save_config', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(importedConfig)
+          });
+
+          if (!response.ok) {
+            throw new Error(`{{text("settings_save_error")}}`);
+          }
+
+          const result = await response.json();
+          if (result.success) {
+            alert(`{{text("config_import_success")}}`);
+            location.reload();
+          } else {
+            showError(result.message || `{{text("settings_save_error")}}`);
+          }
+        } catch (error) {
+          showError(error.message || `{{text("config_import_invalid")}}`);
+        }
+      }
+
 
       function auto_resize() {
         var divs = document.querySelectorAll('.buttons-center');
@@ -1570,6 +1653,20 @@
       });
 
       document.addEventListener("DOMContentLoaded", function() {
+        const exportConfigButton = document.getElementById('export-config');
+        const importConfigButton = document.getElementById('import-config');
+        const importConfigInput = document.getElementById('import-config-file');
+
+        if (exportConfigButton && importConfigButton && importConfigInput) {
+          exportConfigButton.addEventListener('click', exportConfig);
+          importConfigButton.addEventListener('click', function() {
+            importConfigInput.click();
+          });
+          importConfigInput.addEventListener('change', function(event) {
+            importConfigFile(event.target.files[0]);
+            event.target.value = '';
+          });
+        }
 
         fetch('/get_config')
           .then(function (response) {

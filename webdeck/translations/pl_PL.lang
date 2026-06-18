@@ -157,6 +157,13 @@ see_patchnotes=Zobacz listę zmian
 github_issue=Zgłoś błąd na GitHub
 
 language=Język
+config_file=Plik konfiguracji
+export_config=Eksportuj config.json
+import_config=Importuj config.json
+config_import_confirm=Zaimportować ten config.json i zastąpić bieżącą konfigurację?
+config_import_success=Konfiguracja została zaimportowana. WebDeck zostanie ponownie wczytany.
+config_import_invalid=Wybierz prawidłowy plik config.json WebDeck.
+config_export_error=Wystąpił błąd podczas eksportowania config.json.
 config-windows_startup=Uruchamiaj razem z Windows
 auto_updates=Automatyczne aktualizacje
 
