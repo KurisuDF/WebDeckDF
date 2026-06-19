@@ -31,3 +31,4 @@ nava==0.7
 obs-websocket-py
 tqdm
 pydub
+psutil

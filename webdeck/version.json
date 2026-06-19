@@ -1,6 +1,39 @@
 {
     "versions": [
         {
+            "version": "v1.9.0",
+            "release_date": {
+                "day": "26",
+                "month": "09",
+                "year": "2024",
+                "hour": "16",
+                "minute": "10"
+            },
+            "en": {
+                "updates": [
+                    ""
+                ],
+                "minor_enhancements": [],
+                "fixes": [
+                    ""
+                ],
+                "nobody_cares": []
+            },
+            "fr": {
+                "updates": [
+                    ""
+                ],
+                "minor_enhancements": [],
+                "fixes": [
+                    ""
+                ],
+                "nobody_cares": []
+            }
+
+        },        
+        
+        {
+
             "version": "1.8.7",
             "release_date": {
                 "day": "26",

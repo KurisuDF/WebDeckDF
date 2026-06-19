@@ -6,6 +6,8 @@ import webbrowser
 import pystray
 import tkinter as tk
 import random
+import socket
+import psutil
 import qrcode
 import webview
 from PIL import Image, ImageTk
@@ -54,7 +56,9 @@ def open_config():
         webbrowser.open(config_url)
 
 def generate_qr_code(dark_theme=False):
-    url = f"http://{get_local_ip()}:{get_port()}/"
+    config = get_config()
+    host = config["settings"].get("server_host") or get_local_ip()
+    url = f"http://{host}:{get_port()}/"
     
     qr = qrcode.QRCode(
         version=1,
@@ -92,7 +96,14 @@ def show_qrcode():
     label = tk.Label(window, image=image_tk)
     label.pack()
 
-    text_label = tk.Label(window, text=f"http://{local_ip}:{get_port()}/", font=("Helvetica", 13))
+    config = get_config()
+    host = config["settings"].get("server_host") or get_local_ip()
+
+    text_label = tk.Label(
+        window,
+        text=f"http://{host}:{get_port()}/",
+        font=("Helvetica", 13)
+    )
     text_label.pack()
 
     window.iconbitmap("static/icons/icon.ico")
@@ -112,6 +123,52 @@ def show_qrcode():
     window.resizable(width=False, height=False)
     window.protocol("WM_DELETE_WINDOW", close_window)
     window.mainloop()
+
+def create_adapter_menu_items():
+    import socket
+    import psutil
+
+    config = get_config()
+    current_host = config["settings"].get("server_host", "")
+
+    items = [
+        pystray.MenuItem(
+            "Auto",
+            lambda: update_server_host(""),
+            radio=True,
+            checked=lambda item: current_host == ""
+        )
+    ]
+
+    for name, addrs in psutil.net_if_addrs().items():
+        for addr in addrs:
+            if addr.family == socket.AF_INET and not addr.address.startswith("127."):
+                ip = addr.address
+                label = f"{name} ({ip})"
+
+                items.append(
+                    pystray.MenuItem(
+                        label,
+                        lambda item, ip=ip: update_server_host(ip),
+                        radio=True,
+                        checked=lambda item, ip=ip: get_config()["settings"].get("server_host", "") == ip
+                    )
+                )
+
+    return items
+
+def update_server_host(new_host):
+    with open('.config/config.json', 'r') as config_file:
+        config = json.load(config_file)
+
+    config.setdefault("settings", {})
+    config["settings"]["server_host"] = new_host
+
+    with open('.config/config.json', 'w') as config_file:
+        json.dump(config, config_file, indent=4)
+
+    restart_program()
+
 
 def generate_menu(language, server_status=1):
     log.info(f"Server status updated: {server_status}")
@@ -143,11 +200,13 @@ def generate_menu(language, server_status=1):
         language_menu_items.append(pystray.Menu.SEPARATOR)
         language_menu_items.extend([create_language_menu_item(lang) for lang in misc_languages])
 
+    adapter_menu_items = create_adapter_menu_items()
     return pystray.Menu(
         pystray.MenuItem(text('qr_code'), show_qrcode, default=True),
+        pystray.MenuItem(text('open_config'), open_config),
         pystray.MenuItem(text('options'), pystray.Menu(
-            pystray.MenuItem(text('open_config'), open_config),
             pystray.MenuItem(text('language'), pystray.Menu(*language_menu_items)),
+            pystray.MenuItem("Network Adapter", pystray.Menu(*adapter_menu_items)),
             pystray.MenuItem(text('restart_application'), restart_program),
             pystray.MenuItem(text('edit_port'), change_port_prompt),
             pystray.MenuItem(text('fix_firewall'), fix_firewall_permission),
@@ -232,6 +291,53 @@ def change_port_prompt():
     port_entry.focus()
 
     prompt_window.mainloop()
+
+def change_adapter_prompt():
+    adapters = []
+
+    for name, addrs in psutil.net_if_addrs().items():
+        for addr in addrs:
+            if addr.family == socket.AF_INET and not addr.address.startswith("127."):
+                adapters.append((name, addr.address))
+
+    def save_adapter():
+        selected = adapter_var.get()
+
+        with open('.config/config.json', 'r') as f:
+            config = json.load(f)
+
+        config.setdefault("settings", {})
+        config["settings"]["server_host"] = selected
+
+        with open('.config/config.json', 'w') as f:
+            json.dump(config, f, indent=4)
+
+        prompt.destroy()
+        restart_program()
+
+    prompt = tk.Tk()
+    prompt.title("Network Adapter")
+    prompt.geometry("450x250")
+
+    adapter_var = tk.StringVar()
+
+    try:
+        current = get_config()["settings"].get("server_host", "")
+        adapter_var.set(current)
+    except:
+        pass
+
+    for name, ip in adapters:
+        tk.Radiobutton(
+            prompt,
+            text=f"{name} ({ip})",
+            variable=adapter_var,
+            value=ip
+        ).pack(anchor="w")
+
+    tk.Button(prompt, text="Save", command=save_adapter).pack(pady=10)
+
+    prompt.mainloop()
 
 
 def change_tray_language(new_lang):

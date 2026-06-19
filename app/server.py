@@ -575,7 +575,7 @@ def run_server():
         server.serve_forever()
     else:
         app.run(
-            host=get_arg("host") or local_ip,
+            host=get_arg("host") or config["settings"].get("server_host") or local_ip,
             port=get_port(),
             debug=config["settings"].get("flask_debug"),
             use_reloader=config["settings"].get("flask_reloader", False),
