@@ -35,10 +35,20 @@ settings = config['settings']
 
 if settings['app_admin'] and not get_arg('no_admin'):
     if not ctypes.windll.shell32.IsUserAnAdmin():
-        # Rebuild the command including all arguments
-        params = " ".join([__file__] + sys.argv[1:])
-        # Restart the program with admin privileges and include arguments
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, None, 1)
+
+        if getattr(sys, "frozen", False):
+            params = " ".join(sys.argv[1:])
+        else:
+            params = " ".join([__file__] + sys.argv[1:])
+
+        ctypes.windll.shell32.ShellExecuteW(
+            None,
+            "runas",
+            sys.executable,
+            params,
+            None,
+            1
+        )
         sys.exit()
 
 from app.utils.welcome_popup import show_popup

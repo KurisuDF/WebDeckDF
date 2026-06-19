@@ -5,11 +5,10 @@ import json
 import os
 import sys
 import ipaddress
-import ast
 import logging
+import pythoncom
 
 # Third-party library imports
-from PIL import Image
 from werkzeug.serving import make_server
 from flask import Flask, request, jsonify, render_template, send_file, make_response
 from flask.wrappers import Response
@@ -226,29 +225,35 @@ def saveconfig():
         soundboard_stop = not soundboard_start
 
 
-    if (
-        config["settings"]["windows_startup"] == False
-        and new_config["settings"]["windows_startup"] == True
-    ):
+    old_windows_startup = config["settings"].get("windows_startup", False)
+    new_windows_startup = new_config["settings"].get(
+        "windows_startup",
+        old_windows_startup
+    )
+
+    if old_windows_startup == False and new_windows_startup == True:
         if getattr(sys, "frozen", False):
-            dir = (
+            startup_dir = (
                 os.getenv("APPDATA") + r"\Microsoft\Windows\Start Menu\Programs\Startup"
             )
-            path = os.path.join(dir, "WebDeck.lnk")
+            path = os.path.join(startup_dir, "WebDeck.lnk")
             target = os.getcwd() + r"\\WebDeck.exe"
             working_dir = os.getcwd()
             icon = os.getcwd() + r"\\WebDeck.exe"
 
-            shell = Dispatch("WScript.Shell")
-            shortcut = shell.CreateShortCut(path)
-            shortcut.Targetpath = target
-            shortcut.WorkingDirectory = working_dir
-            shortcut.IconLocation = icon
-            shortcut.save()
-    elif (
-        config["settings"]["windows_startup"] == True
-        and new_config["settings"]["windows_startup"] == False
-    ):
+            import pythoncom
+            pythoncom.CoInitialize()
+            try:
+                shell = Dispatch("WScript.Shell")
+                shortcut = shell.CreateShortCut(path)
+                shortcut.Targetpath = target
+                shortcut.WorkingDirectory = working_dir
+                shortcut.IconLocation = icon
+                shortcut.save()
+            finally:
+                pythoncom.CoUninitialize()
+
+    elif old_windows_startup == True and new_windows_startup == False:
         if getattr(sys, "frozen", False):
             file_path = (
                 os.getenv("APPDATA")
@@ -263,13 +268,6 @@ def saveconfig():
     
     folders_to_create = []
     config = save_config(config)
-
-    if isinstance(config["front"]["background"], str):
-        try:
-            config["front"]["background"] = config["front"]["background"].replace("['", '["').replace("']", '"]').replace("', '", "','").replace("','", '","')
-            config["front"]["background"] = ast.literal_eval(config["front"]["background"])
-        except (TypeError, ValueError):
-            pass
 
     save_config(config)
 
@@ -385,6 +383,44 @@ def get_config_route():
 
     return jsonify(config)
 
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204
+
+
+@app.route("/obs/current_scene", methods=["GET"])
+def obs_current_scene():
+    try:
+        from obswebsocket import obsws
+        import app.buttons.obs.scenes as scenes
+
+        config = get_config()
+        obs_config = config["settings"]["obs"]
+
+        obs = obsws(
+            obs_config["host"],
+            int(obs_config["port"]),
+            obs_config["password"]
+        )
+
+        obs.connect()
+        try:
+            current_scene = scenes.get_current(obs)
+        finally:
+            obs.disconnect()
+
+        return jsonify({
+            "success": True,
+            "scene": current_scene
+        })
+
+    except Exception as e:
+        log.exception(e, "Failed to get current OBS scene")
+        return jsonify({
+            "success": False,
+            "scene": None,
+            "error": str(e)
+        })
 
 @app.route("/upload_folderpath", methods=["POST"])
 def upload_folderpath():
@@ -465,10 +501,10 @@ def get_config_file(directory, filename):
     
     try:
         filename = os.path.basename(filename)  # Sanitize the filename
-        file_path = os.path.join(app.root_path.replace('app',''), f".config/{directory}", filename)
+        file_path = os.path.abspath(os.path.join(".config", directory, filename))
 
         if os.path.isfile(file_path):
-            return send_file(file_path, as_attachment=True)
+            return send_file(file_path, as_attachment=False)
         else:
             return make_response(f"File '{filename}' not found.", 404)
     except Exception as e:

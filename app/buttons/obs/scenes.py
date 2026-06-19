@@ -12,3 +12,7 @@ def set(obs, scene_name):
             return True
     log.warning(f"Scene '{scene_name}' not found.")
     raise ValueError(f"Scene '{scene_name}' not found.")
+
+def get_current(obs):
+    result = obs.call(obsrequests.GetCurrentProgramScene())
+    return result.getCurrentProgramSceneName()

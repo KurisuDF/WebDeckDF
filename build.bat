@@ -1,23 +1,24 @@
 @echo off
-echo Starting...
+echo Starting portable WebDeck build...
 
-rem Create a virtual environment
 python -m venv venv
-
-rem Activate the virtual environment
 call venv\Scripts\activate.bat
 
-rem Install dependencies
 pip install -r requirements.txt
+pip install pyinstaller
 
-rem Remove the build directory
-rmdir /s /q build
+rmdir /s /q build 2>nul
+rmdir /s /q dist 2>nul
 
-rem Remove the dist directory
-rmdir /s /q dist
+pyinstaller --clean WebDeck.spec
 
-rem Compile the project and build the MSI installer using cx_Freeze
-python setup.py bdist_msi
+echo Copying runtime folders beside WebDeck.exe...
+
+xcopy webdeck dist\WebDeck\webdeck /E /I /Y
+xcopy templates dist\WebDeck\templates /E /I /Y
+xcopy static dist\WebDeck\static /E /I /Y
+xcopy app dist\WebDeck\app /E /I /Y
 
 echo Build done!
-explorer dist
+explorer dist\WebDeck
+pause

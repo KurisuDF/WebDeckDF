@@ -29,7 +29,6 @@
       div#users-contain table td, div#users-contain table th { border: 1px solid #eee; padding: .6em 10px; text-align: left; }
       .ui-dialog .ui-state-error { padding: .3em; }
       .validateTips { border: 1px solid transparent; padding: 0.3em; }
-      .obs-active-scene { border: 3px solid red !important; box-shadow: 0 0 18px red !important; }
     </style>
 
 
@@ -39,6 +38,7 @@
 
     <script src="/static/js/color-setting.js"></script>
     <script src="/static/js/themes-setting.js"></script>
+    <script src="/static/js/background-setting.js"></script>
     <script src="/static/js/filepath.js"></script>
     <script src="/static/js/folderpath.js"></script>
     <script src="/static/js/loadingscreen.js"></script>
@@ -86,6 +86,15 @@
       </div>
     </div>
 
+    {% if random_bg.endswith(".mp4") %}
+      <div class="background-video">
+        <video autoplay muted loop class="background-video">
+          <source src="{{ '.config/user_uploads/' + random_bg.replace('//','').replace('**uploaded/', '') }}" type="video/mp4">
+          Your browser does not support the video tag...
+        </video>
+      </div>
+    {% endif %}
+
 
     {% if config["settings"]["show_console"] %}
       <form class="form">
@@ -98,11 +107,10 @@
     <style>
       
       body, div.fakeform-container {
-        background: url("/static/img/background.png") center center / cover no-repeat fixed !important;
-      }
-
-      :root {
-        --bg-color: transparent;
+      background-image: url("/static/img/background.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
       }
 
       @media (orientation: portrait) {
@@ -278,7 +286,8 @@
                   {% endif %}
                 {% if config["front"]["buttons"][folder_id][button_id]["image"] == "" or not config["front"]["buttons"][folder_id][button_id]["image"] %}
                 
-                    <button {{ onclick }} id="button_{{edit_modal_ID}}" edit_modal_ID="{{ edit_modal_ID }}" class="{{class}} {% if button_config['message'] and button_config['message'].strip().lower().startswith('/obs_scene') %}obs-scene-button{% endif %}" data-obs-scene="{% if button_config['message'] and button_config['message'].strip().lower().startswith('/obs_scene') %}{{ button_config['message'].replace('/obs_scene','').strip() }}{% endif %}" role="button" style="overflow: hidden; max-height: 89.6px;">                    <!--|||||||||||||||||||||||-->
+                  <button {{ onclick }} id="button_{{edit_modal_ID}}" edit_modal_ID="{{ edit_modal_ID }}" class="{{class}}" role="button" style="overflow: hidden; max-height: 89.6px;">
+                    <!--|||||||||||||||||||||||-->
                     {% if button_config['message'].startswith('/usage') %}
                       {% set name = button_config['message'].replace('<|§|>','').replace("'",'"',2).split('"')[1].strip() %}
                       {% set path = button_config['message'].replace('<|§|>','').replace("'",'"',2).split('"')[2] %}
@@ -306,7 +315,8 @@
                     {% set imagepath = "static/img/" + config["front"]["buttons"][folder_id][button_id]["image"] %}
                   {% endif %}
                   
-                    <button {{ onclick }} id="button_{{edit_modal_ID}}" edit_modal_ID="{{ edit_modal_ID }}" class="{{class}} {% if button_config['message'] and button_config['message'].strip().lower().startswith('/obs_scene') %}obs-scene-button{% endif %}" data-obs-scene="{% if button_config['message'] and button_config['message'].strip().lower().startswith('/obs_scene') %}{{ button_config['message'].replace('/obs_scene','').strip() }}{% endif %}" role="button" style="overflow: hidden; max-height: 89.6px;">                    {% set image_size = '70%' %}
+                  <button {{ onclick }} id="button_{{edit_modal_ID}}" edit_modal_ID="{{ edit_modal_ID }}" class="{{class}}" role="button" style="overflow: hidden; max-height: 89.6px;">
+                    {% set image_size = '70%' %}
                     {% if config["front"]["buttons"][folder_id][button_id]["image_size"] %}
                       {% set image_size = config["front"]["buttons"][folder_id][button_id]["image_size"] %}
                     {% endif %}
@@ -520,6 +530,105 @@
             </div>
           </div>
 
+          <div class="config-container choose-background {{dark_theme}}" id="choose-background" style="display: none;">
+            <
+            <button type="button" id="setting-background-back" class="button {{dark_theme}}">
+              {{text('back')}}
+            </button>
+            <h1 class="config-title"> {{text('random_bg_menu_title')}} </h1>
+            <div class="background-color-input-container">
+              <input type="color" class="background-color-input {{dark_theme}}" id="background-color-input">
+              <input type="text" id="background-color-hex" class="background-color-setting {{dark_theme}}" placeholder="{{text('wallpaper_color')}} (HEX)">
+            </div>
+
+            <div id="create-bg-choices">
+              <button class="{{dark_theme}}" id="create-color-bg"> {{text('add_background_color')}} </button>
+              {{text('or')}}
+              <input type="file" id="create-image-bg" class="{{dark_theme}}" accept="image/jpeg, image/png, image/gif, video/mp4">
+            </div>
+            
+            <div class="editorStyle-bar {{dark_theme}}"></div>
+
+            <div id="choose-backgrounds-container">
+
+              {% for bg in config["front"]["background"] %}
+                {% if bg.replace('//','').startswith(('rgb(', '#')) %}
+                  <div class="choose-bg-element choose-bg-element-color choose-bg-element-pageload {{dark_theme}}"
+                    background="{{bg}}"
+                    background_color_text="{{text('background_color')}}"
+                    style="background-color: {{bg.replace('//','')}};"
+                  >
+                    {{text('background_color')}} : {{bg.replace('//','')}}
+                    <div class="choose-bg-buttons">
+
+                      {% if bg.startswith('//') %}
+                        <div class="choose-bg-activate-button"></div>
+                      {% else %}
+                        <div class="choose-bg-activate-button choose-bg-activate-button-checked"></div>
+                      {% endif %}
+
+                      <svg class="choose-bg-delete-button" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                        <title> {{text('remove_background')}} </title>
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"></path>
+                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                {% elif bg.endswith(".mp4") %}
+                  <div class="choose-bg-element choose-bg-element-image" background="{{bg}}">
+
+                    <div class="video-container choose-bg-pseudo-element">
+                      <video autoplay muted loop class="blurred-video">
+                        <source src="{{ '.config/user_uploads/' + bg.replace('//','').replace('**uploaded/', '') }}" type="video/mp4">
+                        Your browser does not support the video tag...
+                      </video>
+                    </div>
+
+
+                    <div class="video-container">
+                      <video autoplay muted loop>
+                        <source src="{{ '.config/user_uploads/' + bg.replace('//','').replace('**uploaded/', '') }}" type="video/mp4">
+                        Your browser does not support the video tag...
+                      </video>
+                    </div>
+                    {# <img src="{{ '.config/user_uploads/' + bg.replace('//','').replace('**uploaded/', '') }}"> #}
+                    <div class="choose-bg-buttons">
+                      {% if bg.startswith('//') %}
+                        <div class="choose-bg-activate-button"></div>
+                      {% else %}
+                        <div class="choose-bg-activate-button choose-bg-activate-button-checked"></div>
+                      {% endif %}
+                    
+                      <svg class="choose-bg-delete-button" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                        <title> {{text('remove_background')}} </title>
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"></path>
+                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="choose-bg-element choose-bg-element-image" background="{{bg}}">
+                    <div class="choose-bg-pseudo-element" style='background-image: url("{{ '.config/user_uploads/' + bg.replace('//','').replace('**uploaded/', '').replace("'", '&#39;') }}")'></div>
+                    <img src="{{ '.config/user_uploads/' + bg.replace('//','').replace('**uploaded/', '') }}">
+                    <div class="choose-bg-buttons">
+                      {% if bg.startswith('//') %}
+                        <div class="choose-bg-activate-button"></div>
+                      {% else %}
+                        <div class="choose-bg-activate-button choose-bg-activate-button-checked"></div>
+                      {% endif %}
+                    
+                      <svg class="choose-bg-delete-button" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                        <title> {{text('remove_background')}} </title>
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"></path>
+                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
           <div class="config-container {{dark_theme}}" id="config-container" style="display: block;">
             <button class="button modal-button" id="editorButton"> [Q] {{text('enter_editor_mode')}} </button>
             <form id="config-form" class="config-form">
@@ -723,6 +832,15 @@
                     {{text('open_theme_menu')}}
                   </button>
                   <input type="text" name="front.themes" id="choose-themes-handler" class="invisible" value="{{config['front']['themes']}}">
+                </div>
+
+                <div class="setting background">
+                  <label for="background"> {{text('backgrounds')}} </label>
+                  <button type="button" id="setting-background" class="{{dark_theme}}">
+                    {{text('open_background_image_menu')}}
+                  </button>
+                  {% set backgrounds = str(config['front']['background']).replace('",', "',").replace(', "', ", '").replace('["', "['").replace('"]', "']") %}
+                  <input type="text" name="front.background" id="choose-background-handler" class="invisible" value="{{backgrounds}}">
                 </div>
 
                 <div class="setting {{dark_theme}}">
@@ -2818,31 +2936,7 @@
         onresize = (event) => {
           auto_resize();
         };
-      async function updateObsActiveScene() {
-        try {
-          const response = await fetch("/obs/current_scene");
-          const data = await response.json();
 
-          if (!data.success || !data.scene) {
-            return;
-          }
-
-          document.querySelectorAll(".obs-scene-button").forEach(button => {
-            const sceneName = button.dataset.obsScene;
-
-            if (sceneName && sceneName.trim().toLowerCase() === data.scene.trim().toLowerCase()) {
-              button.classList.add("obs-active-scene");
-            } else {
-              button.classList.remove("obs-active-scene");
-            }
-          });
-        } catch (error) {
-          console.log("OBS scene highlight failed:", error);
-        }
-      }
-
-      setInterval(updateObsActiveScene, 1000);
-      updateObsActiveScene();
 
       });
 

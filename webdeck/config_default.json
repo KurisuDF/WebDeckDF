@@ -43,7 +43,7 @@
     },
     "front": {
         "background": [
-            "#141414"
+            "/static/img/background.png"
         ],
         "computer_usage_reload_time": "3000",
         "edit_buttons_color": false,
@@ -425,6 +425,6 @@
     },
     "url": {
         "ip": "0.0.0.0",
-        "port": 59997
+        "port": 5000
     }
 }
