@@ -31,6 +31,9 @@
       .validateTips { border: 1px solid transparent; padding: 0.3em; }
       .obs-active-scene { box-shadow: 0 0 18px white !important; animation: borderPulse 1s infinite ease-in-out !important;}
       .wd_button.obs-active-scene { background: white !important; }
+      #version-links a:hover {
+      color: #ffba24 !important;
+      }
     </style>
 
 
@@ -410,13 +413,24 @@
         </div>
         <div style="display: flex; flex-direction: column;">
           <span class="{{dark_theme}}" id="version">
-            V.1.9.0
+            V1.9.0
           </span>
-          <a class="{{dark_theme}}" id="version" href="https://https://www.dartfish.com" text="Dartfish Website"
-          </a>
-          <a class="{{dark_theme}}" id="version" href="https://github.com/Lenochxd/WebDeck/releases/tag/v{{versions['versions'][0]['version']}}" target="_blank" title="{{text('see_patchnotes')}}" alt="{{text('see_patchnotes')}}">
-            Forked of WebDeck/Lenochxd
-          </a>
+          <span class="{{dark_theme}}" id="version-links" style="margin-top: 2px;">
+            <a class="{{dark_theme}}" style=" text-decoration: none; color: #969696;"
+              href="https://www.dartfish.com"
+              target="_blank"
+              style="margin-top: 4px;">
+              Dartfish Website
+            </a>
+          </span>
+          <span class="{{dark_theme}}" id="version-links" style="margin-top: 2px;">
+            <a class="{{dark_theme}}" style=" text-decoration: none; color: #969696;"
+              href="https://github.com/Lenochxd/WebDeck"
+              target="_blank"
+              style="margin-top: 4px; ">
+              Forked from WebDeck by Lenochxd
+            </a>
+          </span>
         </div>
 
         <div class="modal-main">
@@ -556,11 +570,7 @@
                 <div class="setting windows-startup {% if not is_exe %}invisible{% endif %}">
                   <p> {{text('config-windows_startup')}} </p>
                   <label for="windows-startup" class="switch">
-                    {% if 'windows-startup' in config['settings'].keys() %}
-                      <input class="{{dark_theme}}" type="checkbox" id="windows-startup" name="settings.windows_startup" {% if config['settings']['windows_startup'] %}checked{% endif %}>
-                    {% else %}
-                      <input class="{{dark_theme}}" type="checkbox" id="windows-startup" name="settings.windows_startup" checked>
-                    {% endif %}
+                    <input class="{{dark_theme}}" type="checkbox" id="windows-startup" name="settings.windows_startup" {% if config['settings'].get('windows_startup', False) %}checked{% endif %}>
                     <span class="slider round"></span>
                   </label>
                 </div>
