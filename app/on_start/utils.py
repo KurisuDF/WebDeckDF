@@ -10,7 +10,6 @@ import threading
 from math import sqrt
 from win32com.client import Dispatch
 
-from app.updater import check_files, check_for_updates
 from app.utils.settings.get_config import get_config
 from app.utils.settings.save_config import save_config
 from app.utils.global_variables import set_global_variable
@@ -165,15 +164,10 @@ def on_start():
     if not os.path.exists(".config/plugins"):
         os.makedirs(".config/plugins")
         
-    # Update new files
-    check_files()
     
     # Load config & get gpu method
     config = get_gpu_method()
     
-    # Checks for updates
-    if (config["settings"].get("auto_updates", True) or get_arg('force_update')) and not get_arg('no_auto_update'):
-        check_for_updates()
     
     # Load commands
     with open("webdeck/commands.json", encoding="utf-8") as f:

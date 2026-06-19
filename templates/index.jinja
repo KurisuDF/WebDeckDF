@@ -409,11 +409,13 @@
           </div>
         </div>
         <div style="display: flex; flex-direction: column;">
-          <a class="{{dark_theme}}" id="version" href="https://github.com/Lenochxd/WebDeck/releases/tag/v{{versions['versions'][0]['version']}}" target="_blank" title="{{text('see_patchnotes')}}" alt="{{text('see_patchnotes')}}">
-            v{{versions['versions'][0]['version']}}
+          <span class="{{dark_theme}}" id="version">
+            V.1.9.0
+          </span>
+          <a class="{{dark_theme}}" id="version" href="https://https://www.dartfish.com" text="Dartfish Website"
           </a>
-          <a class="{{dark_theme}}" id="version" href="https://github.com/Lenochxd/WebDeck/issues/new/choose" target="_blank" alt="{{text('github_issue')}}" style="margin-top: -4px;">
-            {{text('github_issue')}}
+          <a class="{{dark_theme}}" id="version" href="https://github.com/Lenochxd/WebDeck/releases/tag/v{{versions['versions'][0]['version']}}" target="_blank" title="{{text('see_patchnotes')}}" alt="{{text('see_patchnotes')}}">
+            Forked of WebDeck/Lenochxd
           </a>
         </div>
 
@@ -558,18 +560,6 @@
                       <input class="{{dark_theme}}" type="checkbox" id="windows-startup" name="settings.windows_startup" {% if config['settings']['windows_startup'] %}checked{% endif %}>
                     {% else %}
                       <input class="{{dark_theme}}" type="checkbox" id="windows-startup" name="settings.windows_startup" checked>
-                    {% endif %}
-                    <span class="slider round"></span>
-                  </label>
-                </div>
-
-                <div class="setting auto-updates {% if not is_exe %}invisible{% endif %}">
-                  <p> {{text('auto_updates')}} </p>
-                  <label for="auto-updates" class="switch">
-                    {% if 'auto-updates' in config['settings'].keys() %}
-                      <input class="{{dark_theme}}" type="checkbox" id="auto-updates" name="settings.auto_updates" {% if config['settings']['auto_updates'] %}checked{% endif %}>
-                    {% else %}
-                      <input class="{{dark_theme}}" type="checkbox" id="auto-updates" name="settings.auto_updates" checked>
                     {% endif %}
                     <span class="slider round"></span>
                   </label>
