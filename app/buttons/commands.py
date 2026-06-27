@@ -103,6 +103,16 @@ def handle_command(message=None):
     elif message.startswith("/key"):
         key = message.replace("/key", "", 1).strip()
         pyautogui.press(key)
+        
+    elif message.startswith("/hotkey"):
+        hotkeys = message.replace("/hotkey", "", 1).strip().split(";")
+
+        for hotkey in hotkeys:
+            hotkey = hotkey.strip()
+            if hotkey:
+                keyboard.press_and_release(hotkey)
+                log.success(f"Executed hotkey: {hotkey}")
+                time.sleep(0.05)
 
     elif message.startswith("/restartexplorer"):
         subprocess.Popen("taskkill /f /im explorer.exe", shell=True)

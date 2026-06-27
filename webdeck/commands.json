@@ -604,6 +604,18 @@
         "image_size": "75%"
       }
     },
+    "Press a hotkey": {
+      "command": "/hotkey",
+      "args": [
+        {
+          "TYPE": "input text"
+        }
+      ],
+      "style": {
+        "image": "key.png",
+        "image_size": "75%"
+      }
+    },
     "Write text": {
       "command": "/write",
       "args": [
